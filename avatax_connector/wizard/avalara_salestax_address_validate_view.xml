@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
+<odoo>
     <data>
 
         <!-- Partner Address Validate -->
@@ -51,4 +51,4 @@
         </record>
 
     </data>
-</openerp>
+</odoo>

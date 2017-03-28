@@ -1,75 +1,108 @@
 # -*- coding: utf-8 -*-
+# Copyright 2017 LasLabs Inc.
+# Copyright 2016 Odoo S.A.
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
-from openerp import api, fields, models, _
 import time
-from openerp.exceptions import UserError
 
-@api.model
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
+
+@api.multi
 def get_origin_tax_date(self):
-    """ partner address, on which avalara tax will calculate  """
-    for inv_obj in self:
-        if inv_obj.origin:
-            a = inv_obj.origin
-            
-            if len(a.split(':')) > 1:
-                inv_origin = a.split(':')[1]
-            else:
-                inv_origin = a.split(':')[0]
-                
-            inv_ids = self.search([('number','=', inv_origin)])  
-            for invoice in inv_ids:
-                if invoice.date_invoice:
-                    return invoice.date_invoice
-                else:
-                    return inv_obj.date_invoice                                 
+    """ Partner address, on which Avalara tax will calculate. """
+    self.ensure_one()
+    if self.origin:
+        a = self.origin
+        
+        if len(a.split(':')) > 1:
+            inv_origin = a.split(':')[1]
         else:
-            return False          
+            inv_origin = a.split(':')[0]
+            
+        origin = self.search([
+            ('number', '=', inv_origin),
+        ],
+            limit=1,
+        )
+        return origin.date_invoice or self.date_invoice
+    else:
+        return False          
+
 
 class AccountInvoice(models.Model):
-    """Inherit to implement the tax calculation using avatax API"""
+    """Inherit to implement the tax calculation using Avatax API. """
+
     _inherit = "account.invoice"
 
+    invoice_doc_no = fields.Char(
+        string='Source/Ref Invoice No',
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+        help="Reference of the invoice",
+    )
+    invoice_date = fields.Date(
+        string='Invoice Date',
+        readonly=True,
+    )
+    is_add_validate = fields.Boolean(
+        string='Address validated',
+    )
+    exemption_code = fields.Char(
+        string='Exemption Number',
+        help="It shows the customer exemption number",
+    )
+    exemption_code_id = fields.Many2one(
+        string='Exemption Code',
+        comodel_name='exemption.code',
+        help="It show the customer exemption code",
+    )
+    tax_add_default = fields.Boolean(
+        string='Default Address',
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+    )
+    tax_add_invoice = fields.Boolean(
+        string='Invoice Address',
+        default=True,
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+    )
+    tax_add_shipping = fields.Boolean(
+        string='Delivery Address',
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+    )
+    shipping_add_id = fields.Many2one(
+        string='Tax Address',
+        comodel_name='res.partner',
+        change_default=True,
+        track_visibility='always',
+    )
+    shipping_address = fields.Text(
+        string='Tax Address',
+    )
+    location_code = fields.Char(
+        string='Location code',
+        readonly=True,
+        states={'draft': [('readonly', False)]},
+    )
+    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
+
     @api.onchange('partner_id', 'company_id')
-    def _onchange_partner_id(self):
-        res = super(AccountInvoice, self)._onchange_partner_id()        
+    def _onchange_partner_id_avatax_connector(self):
         self.exemption_code = self.partner_id.exemption_number or ''
         self.exemption_code_id = self.partner_id.exemption_code_id.id or None
-        #res['value']['tax_add_shipping'] = True
-#        self.shipping_address = str((self.partner_id.name  or '')+ '\n'+(self.partner_id.street or '')+ '\n'+(self.partner_id.city and self.partner_id.city+', ' or ' ')+(self.partner_id.state_id and self.partner_id.state_id.name or '')+ ' '+(self.partner_id.zip or '')+'\n'+(self.partner_id.country_id and self.partner_id.country_id.name or ''))        
-#        self.
-        if self.partner_id.validation_method: self.is_add_validate = True
-        else: self.is_add_validate = False
-        return res
-            
+        self.is_add_validate = bool(self.partner_id.validation_method)
+
     @api.onchange('warehouse_id')
-    def onchange_warehouse_id(self):    
+    def onchange_warehouse_id_avatax_connector(self):
         if self.warehouse_id:
             if self.warehouse.company_id:
                 self.company_id = self.warehouse.company_id.id
             if self.warehouse.code:
                 self.location_code = self.warehouse.code
-    
 
-#    @api.model
-#    def create(self, vals):
-#        if vals.get('partner_id', False):
-#            sale_obj = self.env['sale.order']   
-#            pick_obj = self.env['stock.picking']
-#            sale_ids = sale_obj.search([('name','=',vals.get('origin',''))])
-#            pick_ids = pick_obj.search([('name','=',vals.get('origin',''))])
-#            if sale_ids:
-#                sale_order = sale_ids[0]
-#                if 'warehouse_id' in sale_order:
-#                    vals['warehouse_id'] = sale_order.warehouse_id and sale_order.warehouse_id.id or False
-#                    vals['location_code'] = sale_order.warehouse_id and sale_order.warehouse_id.code or False
-#                
-#                if pick_ids:
-#                    pick_type = pick_ids[0].picking_type_id
-#                    vals['warehouse_id'] = pick_type and pick_type.warehouse_id and pick_type.warehouse_id.id or False
-#                    vals['location_code'] = pick_type and pick_type.warehouse_id and pick_type.warehouse_id.code or False
-#            if self.partner_id.validation_method: vals['is_add_validate'] = True
-#        return super(AccountInvoice, self).create(vals)
-    
     @api.multi
     def write(self, vals):
         for self_obj in self:
@@ -85,7 +118,9 @@ class AccountInvoice(models.Model):
                     else:
                         so_origin = self_obj.origin.split(':')[0]
 
-                    sale_ids = self.env['sale.order'].search([('name','=',so_origin)])  
+                    sale_ids = self.env['sale.order'].search([
+                        ('name','=',so_origin),
+                    ])
                     if sale_ids:
                         ship_add_id = sale_ids[0].partner_id
 
@@ -96,30 +131,17 @@ class AccountInvoice(models.Model):
                     else:
                         so_origin = self_obj.origin.split(':')[0]
 
-                    sale_ids = self.env['sale.order'].search([('name','=',so_origin)])  
+                    sale_ids = self.env['sale.order'].search([
+                        ('name','=',so_origin),
+                    ])
                     if sale_ids:
                         ship_add_id = sale_ids[0].partner_shipping_id
             if ship_add_id:
-#                vals['shipping_address'] = str(ship_add_id.name+ '\n'+(ship_add_id.street or '')+ '\n'+(ship_add_id.city and ship_add_id.city+', ' or ' ')+(ship_add_id.state_id and ship_add_id.state_id.name or '')+ ' '+(ship_add_id.zip or '')+'\n'+(ship_add_id.country_id and ship_add_id.country_id.name or ''))   
                 vals['shipping_add_id'] = ship_add_id.id
             else:
                 vals['shipping_add_id'] = self_obj.partner_id.id
         
-        return super(AccountInvoice, self).write(vals)        
-        
-    invoice_doc_no = fields.Char('Source/Ref Invoice No', readonly=True, states={'draft':[('readonly',False)]}, help="Reference of the invoice")
-    invoice_date = fields.Date('Invoice Date', readonly=True)
-    is_add_validate = fields.Boolean('Address validated')
-    exemption_code = fields.Char('Exemption Number', help="It show the customer exemption number")
-    exemption_code_id = fields.Many2one('exemption.code', 'Exemption Code', help="It show the customer exemption code")
-    tax_add_default = fields.Boolean('Default Address', readonly=True, states={'draft':[('readonly',False)]})
-    tax_add_invoice = fields.Boolean('Invoice Address', default= True, readonly=True, states={'draft':[('readonly',False)]})
-    tax_add_shipping = fields.Boolean('Delivery Address', readonly=True, states={'draft':[('readonly',False)]})
-    shipping_add_id = fields.Many2one('res.partner', 'Tax Address', change_default=True, track_visibility='always')
-    shipping_address = fields.Text('Tax Address')
-    location_code = fields.Char('Location code', readonly=True, states={'draft':[('readonly',False)]}) 
-    warehouse_id = fields.Many2one('stock.warehouse', 'Warehouse')
-
+        return super(AccountInvoice, self).write(vals)
     
     @api.onchange('tax_add_default', 'origin', 'partner_id')
     def default_tax_address(self):

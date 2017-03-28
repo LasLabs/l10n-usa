@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+# Copyright 2017 LasLabs Inc.
+# Copyright 2016 Odoo S.A.
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
-from openerp import api, fields, models, _
-from openerp.exceptions import UserError
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 
 class exemption_code(models.Model):
     _name = 'exemption.code'

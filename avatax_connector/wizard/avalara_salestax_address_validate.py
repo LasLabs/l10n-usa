@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+# Copyright 2017 LasLabs Inc.
+# Copyright 2016 Odoo S.A.
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
 import time
-from openerp import api, fields, models, _
-from openerp.exceptions import UserError
-from openerp.tools import DEFAULT_SERVER_DATE_FORMAT
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
+from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
 
 
 class AvalaraSalestaxAddressValidate(models.TransientModel):
@@ -28,16 +31,20 @@ class AvalaraSalestaxAddressValidate(models.TransientModel):
 
     @api.model
     def view_init(self, fields):
-        """ Checks for precondition before wizard executes. """
+        """ Checks for precondition before wizard executes.
+
+        Check if there is avatax tax service active for the user company.
+
+        Prevent validating the address if the address validation is disabled
+         by the administrator.
+        """
+
         address_obj = self.env['res.partner']
-        avatax_config_obj= self.env['avalara.salestax']
+        avatax_config_obj = self.env['avalara.salestax']
         
         context = dict(self._context or {})
         active_id = context.get('active_id')
         active_model = context.get('active_model')
-
-        # Check if there is avatax tax service active for the user company.
-        # Prevent validating the address if the address validation is disabled by the administrator.
 
         if active_id and active_model == 'res.partner':
             avatax_config = avatax_config_obj._get_avatax_config_company()
@@ -45,9 +52,16 @@ class AvalaraSalestaxAddressValidate(models.TransientModel):
                 raise UserError(_("The AvaTax Tax Service is not active."))
             address = address_obj.browse(active_id)
             if avatax_config.validation_on_save:
-                raise UserError(_("Address Validation on Save is already active in the AvaTax Configuration."))
-            address_obj.check_avatax_support(avatax_config, address.country_id and address.country_id.id or False)
-        return True
+                raise UserError(_(
+                    "Address Validation on Save is already active in "
+                    "the AvaTax Configuration."
+                ))
+            address_obj.check_avatax_support(
+                avatax_config,
+                address.country_id and address.country_id.id or False
+            )
+
+        return super(AvalaraSalestaxAddressValidate, self).view_init(fields)
 
     @api.model
     def default_get(self, fields):

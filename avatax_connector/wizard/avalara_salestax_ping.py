@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+# Copyright 2017 LasLabs Inc.
+# Copyright 2016 Odoo S.A.
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
-from openerp import api, fields, models, _
-from openerp.addons.avatax_connector.models.avalara_api import AvaTaxService
+from odoo import api, fields, models, _
+from odoo.addons.avatax_connector.models.avalara_api import AvaTaxService
 #from avalara_salestax.avalara_api import AvaTaxService
 #from ../avalara_api import AvaTaxService
 '''

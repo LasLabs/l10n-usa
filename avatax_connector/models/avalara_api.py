@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright 2017 LasLabs Inc.
+# Copyright 2016 Odoo S.A.
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
 import suds
 import socket
@@ -7,10 +10,10 @@ import string
 import os
 import datetime
 #import base64
-from openerp import tools
-from openerp.tools.translate import _
-from openerp import fields
-from openerp.exceptions import UserError
+from odoo import tools
+from odoo.tools.translate import _
+from odoo import fields
+from odoo.exceptions import UserError
 
 class AvaTaxService:
 

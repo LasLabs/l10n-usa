@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+# Copyright 2017 LasLabs Inc.
+# Copyright 2016 Odoo S.A.
+# License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
-from openerp import api, fields, models, _
-from openerp.tools.translate import _
-import openerp.addons.decimal_precision as dp
+from odoo import api, fields, models, _
+from odoo.tools.translate import _
+import odoo.addons.decimal_precision as dp
 from datetime import datetime
-from openerp.exceptions import UserError
+from odoo.exceptions import UserError
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
