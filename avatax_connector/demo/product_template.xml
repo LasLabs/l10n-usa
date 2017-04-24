@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    Copyright 2017 LasLabs Inc.
+    License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
+-->
+
+<odoo>
+    <record id="demo_product_1" model="product.template">
+        <field name="categ_id" ref="product.product_category_all"/>
+        <field name="name">A - Demo Product</field>
+        <field name="sale_line_warn">no-message</field>
+        <field name="tracking">none</field>
+        <field name="type">consu</field>
+    </record>
+</odoo>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="avalara_salestax_ping_view_form" model="ir.ui.view">
+        <field name="name">Test Connection</field>
+        <field name="model">avalara.salestax.ping</field>
+        <field name="arch" type="xml">
+            <form string="Test Connection">
+                <group height="70" width="130">
+                    <field name="name" invisible="1"/>
+                    <label align="0.5" string="Test Connection Successful" colspan="4"/>
+                    <newline/>
+                </group>
+                <footer>
+                    <button icon="fa-check" special="cancel" string="_OK"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="avalara_salestax_ping_action" model="ir.actions.act_window">
+        <field name="name">Test Connection</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">avalara.salestax.ping</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="avalara_salestax_ping_view_form"/>
+        <field name="context">{'record_id': active_id}</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

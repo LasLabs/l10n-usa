@@ -1,0 +1,11 @@
+<odoo>
+    <record id="demo_tax_code_1" model="product.tax.code">
+        <field name="name">Demo Tax Code 1</field>
+        <field name="type">product</field>
+    </record>
+
+    <record id="demo_tax_code_2" model="product.tax.code">
+        <field name="name">Demo Tax Code 2</field>
+        <field name="type">product</field>
+    </record>
+</odoo>

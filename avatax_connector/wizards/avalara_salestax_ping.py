@@ -3,31 +3,21 @@
 # Copyright 2016 Odoo S.A.
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl.html).
 
-from odoo import api, fields, models, _
-from odoo.addons.avatax_connector.models.avalara_api import AvaTaxService
-#from avalara_salestax.avalara_api import AvaTaxService
-#from ../avalara_api import AvaTaxService
-'''
-def load_src(name, fpath):
-    import os, imp
-    return imp.load_source(name, os.path.join(os.path.dirname(__file__), fpath))
-
-aapi = load_src("aapi", "../avalara_api.py")
-from aapi import AvaTaxService 
-    '''
+from odoo import api, fields, models
+from ..models.avalara_api import AvaTaxService
 
 
 class AvalaraSalestaxPing(models.TransientModel):
     _name = 'avalara.salestax.ping'
     _description = 'Ping Service'
-    
+
     @api.model
     def default_get(self, fields):
         res = super(AvalaraSalestaxPing, self).default_get(fields)
         self.ping()
         return res
 
-    name = fields.Char('Name')
+    name = fields.Char()
 
     @api.model
     def ping(self):
@@ -38,12 +28,15 @@ class AvalaraSalestaxPing(models.TransientModel):
         if active_id:
             avatax_pool = self.env['avalara.salestax']
             avatax_config = avatax_pool.browse(active_id)
-            avapoint = AvaTaxService(avatax_config.account_number, avatax_config.license_key,
-                                      avatax_config.service_url, avatax_config.request_timeout, avatax_config.logging)
-            taxSvc = avapoint.create_tax_service().taxSvc     # Create 'tax' service for Ping and is_authorized calls
+            avapoint = AvaTaxService(
+                avatax_config.account_number,
+                avatax_config.license_key,
+                avatax_config.service_url,
+                avatax_config.request_timeout,
+                avatax_config.logging)
+            # Create 'tax' service for Ping and is_authorized calls
+            avapoint.create_tax_service().taxSvc
             avapoint.ping()
             result = avapoint.is_authorized()
             avatax_config.write({'date_expiration': result.Expires})
         return True
-    
-# vim:expandtab:smartindent:tabstop=4:softtabstop=4:shiftwidth=4:

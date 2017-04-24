@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">    
+    <record id="avatax" model="account.tax">
+        <field name="name">AVATAX</field>
+        <field name="amount" eval="0.0"/>
+        <field name="type_tax_use">sale</field>
+        <field name="is_avatax" eval="True"/>
+   </record>
+</odoo>

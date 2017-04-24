@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_tax_code_view_tree" model="ir.ui.view">
+        <field name="name">product.tax.code.tree</field>
+        <field name="model">product.tax.code</field>
+        <field name="type">tree</field>
+        <field name="arch" type="xml">
+            <tree string="Product Tax Code">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="type"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="product_tax_code_view_form" model="ir.ui.view">
+        <field name="name">product.tax.code.form</field>
+        <field name="model">product.tax.code</field>
+        <field name="arch" type="xml">
+            <form string="Product Tax Code">
+                <group name="taxcode" col="4" colspan="4">
+                    <field name="name"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="description"/>
+                    <field name="type"/>
+                </group>          
+            </form>
+        </field>
+    </record>
+
+    <record id="product_tax_code_action" model="ir.actions.act_window">
+        <field name="name">Product Tax Codes</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">product.tax.code</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <menuitem action="product_tax_code_action" id="product_tax_code_menu" name="Product Tax Codes" parent="avatax_menu"/>
+</odoo>
